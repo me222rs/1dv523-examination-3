@@ -1,0 +1,33 @@
+body{
+  background-color: #7B84AE;
+}
+#content {
+    overflow: hidden; /* clear the float */
+    background-color: #172457;
+}
+#issueList {
+    width: 50%;
+    float: left;
+}
+#notificationList {
+    overflow: hidden;
+}
+.issueBox{
+  border-radius: 10px;
+  background-color: #515E91;
+  box-shadow: 10px 10px 5px #000000;
+  width:100%;
+  word-break: break-all;
+}
+.notificationBox{
+  background-color: #7B84AE;
+    box-shadow: 10px 10px 5px #000000;
+}
+.issueBody{
+  border-radius: 5px;
+  background-color: #7B84AE;
+  box-shadow: 10px 10px 5px #000000;
+  margin:10px;
+  height: 100px;
+  overflow-y: scroll;
+}

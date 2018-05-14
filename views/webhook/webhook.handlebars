@@ -1,0 +1,100 @@
+<div id="content">
+  <div id="issueList">
+    <h2>All issues</h2>
+    <span id="test"></span>
+    <ul id='issues'></ul>
+    <ul>
+        {{#each issues}}
+        <div class="issueBox" id="{{number}}">
+            <a href="{{html_url}}"><h3>{{title}}</h3></a>
+            <span id="newComments{{number}}" class="newComments" style="visibility:hidden">New comment: 1</span><br>
+            <div class="issueBody">
+              <span>{{body}}</span><br>
+            </div>
+            <span>User: {{user.login}}</span><br>
+            <span id="commentsOnId{{number}}">Comments: {{comments}}</span><br>
+        </div>
+        {{/each}}
+    </ul>
+
+  </div>
+  <div id="notificationList">
+    <h2>Notifications</h2>
+    <ul id='messages'></ul>
+  </div>
+</div>
+<script src='/socket.io/socket.io.js'></script>
+<script>
+    var socket = io();
+    //Notifications
+    socket.on('issue', function(data) {
+        if(data.action === 'opened' || data.action === 'reopened'){
+          var issue = "Issue " + data.title + " was " + data.action;
+        }
+        if(data.action === 'closed'){
+          var issue = "Issue " + data.title + " was " + data.action;
+          $('#'+data.issueNumber).remove();
+        }
+        addNotification(issue);
+    });
+    //Issue list
+    socket.on('issueList', function(data) {
+          var issue = "<a href='"+data.url+"'><h3>"+data.title+"</h3></a><span class='newComments' id='newComments"+data.issueNumber+"' style='visibility:hidden'>New comment: 1</span><br><div class='issueBody'>"+data.body+"</div><br><span>User:"+data.user+"</span><br><span id='commentsOnId"+data.issueNumber+"'>Comments: 0</span><br>";
+          addIssue(issue, data.issueNumber);
+    });
+    //Comments
+    socket.on('issueComment', function(data) {
+        var issue = data.user+" "+ data.action + " comment: " + data.body;
+        addNotification(issue);
+
+        //If comment was deleted or edited it won't count as a new comment. Just a notification will be shown of what happened.
+        if(data.action !== 'deleted'){
+          console.log(data.action);
+          var y = document.getElementById("commentsOnId"+data.issueNumber).innerHTML.replace(/\D/g, '');
+          document.getElementById("commentsOnId"+data.issueNumber).innerHTML = "Comments: " + (parseInt(y)+1);
+          addIssueComment("New comment!", data.issueNumber);
+        }
+        //If a comment was deleted, the issue total comment count decreases
+        else{
+          var x = document.getElementById("commentsOnId"+data.issueNumber).innerHTML.replace(/\D/g, '');
+          document.getElementById("commentsOnId"+data.issueNumber).innerHTML = "Comments: " + (parseInt(x)-1);
+        }
+    });
+
+    //Adds an issue to the notification list
+    function addNotification(message) {
+        var text = document.createTextNode(message);
+        var divTag = document.createElement('div');
+        var messages = document.getElementById('messages');
+        divTag.setAttribute('class', 'notificationBox');
+        divTag.appendChild(text);
+        messages.appendChild(divTag);
+    }
+
+    //Adds an issue to the issue list
+    function addIssue(issue, id) {
+        var text = document.createElement('div');
+        text.setAttribute('class', 'issueBox');
+        text.setAttribute('id', id);
+        issues = document.getElementById('issues');
+        text.innerHTML = issue;
+        issues.insertBefore(text, issues.childNodes[0]);
+    }
+    //Adds a message to the issue where the comment was added on
+    function addIssueComment(message, id) {
+        var x = document.getElementById(id).lastChild.innerHTML;
+        if(x === "New comment!"){
+            var y = document.getElementById("newComments"+id).innerHTML.replace(/\D/g, '');
+            document.getElementById("newComments"+id).innerHTML = "New comments: " + (parseInt(y)+1);
+        }
+        else{
+          document.getElementById("newComments"+id).style.visibility='visible';
+          var text = document.createTextNode(message);
+          var element = document.getElementById(id);
+          var divTag = document.createElement('div');
+          divTag.style.visibility='hidden';
+          divTag.appendChild(text);
+          element.appendChild(divTag);
+        }
+    }
+</script>
